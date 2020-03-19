@@ -22,12 +22,11 @@ const Authors = (props) => {
   if (!props.show) {
     return null
   }
-  const authors = props.authors
+  const authors = props.authors.allAuthors
 
   const submit = async (event) => {
     event.preventDefault()
     
-    console.log('add book...')
     editAuthor({ variables: { name, born } })
 
     setName('')
@@ -35,6 +34,34 @@ const Authors = (props) => {
   }
 
 
+  let updateForm
+    if(!props.notlogged){
+      updateForm = (
+      <div>
+        <h3>Set birthyear</h3>
+      <br/>
+      <form onSubmit={submit}>
+        <label>
+          <select onChange={({ target }) => setName(target.value)}>
+            {authors.map(a => 
+              <option key={a.name}>{a.name}</option>
+            )}
+          </select>
+        </label>
+        <div>
+          born
+          <input
+            type='number'
+            value={born}
+            onChange={({ target }) => setBorn(parseInt(target.value))}
+          />
+        </div>
+        <button type='submit'>update author</button>
+      </form>
+      </div>
+      )
+    } 
+  
   return (
     <div>
       <h2>authors</h2>
@@ -59,28 +86,8 @@ const Authors = (props) => {
         </tbody>
       </table>
       <br/>
-      <h3>Set birthyear</h3>
-      <br/>
-      <form onSubmit={submit}>
-        <label>
-          <select onChange={({ target }) => setName(target.value)}>
-            {authors.map(a => 
-              <option>{a.name}</option>
-            )}
-          </select>
-        </label>
-        <div>
-          born
-          <input
-            type='number'
-            value={born}
-            onChange={({ target }) => setBorn(parseInt(target.value))}
-          />
-        </div>
-        <button type='submit'>update author</button>
-      </form>
-
-    </div>
+      {updateForm}
+      </div>
   )
 }
 

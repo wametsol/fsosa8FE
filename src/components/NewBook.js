@@ -9,8 +9,9 @@ const ADD_BOOK = gql`
       published: $published
       genres: $genres
     ){
-      title
-      author
+      author{
+        name
+      }
     }
   }
 `

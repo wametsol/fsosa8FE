@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { gql, useMutation, useLazyQuery } from '@apollo/client'
 
 const SET_GENRE = gql`
@@ -16,16 +16,16 @@ query setGenre($genre: String!){
 
 
 const Books = (props) => {
-  const [genre, setGenre] = useState('')
-  const [visibleBooks, setVisibleBooks] = useState('')
-  const [ allBooks ] = useLazyQuery(SET_GENRE)
-  if (!props.show) {
-    return null
-  }
+  const [genre, setGenre] = useState(null)
+  const [selectedGenre, setSelectedGenre] = useState("")
+  const [ getBooks, result ] = useLazyQuery(SET_GENRE)
+
+  //const { chooseGenre } = props
+  
 
   const books = props.books.allBooks
 
-  console.log(props.chosenBooks.allBooks)
+  //console.log(props.chosenBooks.allBooks)
   let genres = []
   books.map(b => {
     b.genres.map(g => {
@@ -35,27 +35,59 @@ const Books = (props) => {
     })
   })
   const chooseGenre = async (a) => {
-    setGenre(a)
-    let fetchedBooks = allBooks( {variables: {genre: a} })
+    setSelectedGenre(a)
+    getBooks( {variables: {genre: a} })
+  }
+  useEffect(() => {
+    if(result.data){
+      setGenre(result.data.allBooks)
+    }
+  }, [result])
 
-    setVisibleBooks(fetchedBooks)
-   
-    console.log(fetchedBooks)
+
+  if (!props.show) {
+    return null
   }
 
   const clearGenre = async () => {
-    setGenre('')
-    setVisibleBooks(books)
+    setGenre(null)
   }
-  console.log('GENRES: ' ,genres)
 
   let showCurrent
-  console.log(visibleBooks)
   if (genre){
-    showCurrent=(
-    <div>
-      <p>Chosen genre: {genre} <button onClick={() => clearGenre()}>Clear</button></p>
-    </div>)
+    return (
+      <div>
+        <h2>books</h2>
+  
+        <table>
+          <tbody>
+            <tr>
+              <th></th>
+              <th>
+                author
+              </th>
+              <th>
+                published
+              </th>
+            </tr>
+            {genre.map(a =>
+              <tr key={a.title}>
+                <td>{a.title}</td>
+                <td>{a.author.name}</td>
+                <td>{a.published}</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+        <h3>Genres:</h3>
+        <div>
+      <p>Chosen genre: {selectedGenre} <button onClick={() => clearGenre()}>Clear</button></p>
+    </div>
+        {genres.map(a => 
+                <button key={a} onClick={() => chooseGenre(a)}>{a}</button>
+        )}
+      </div>
+    )
   }
 
   return (

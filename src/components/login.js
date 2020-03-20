@@ -9,7 +9,7 @@ const LOGIN = gql`
   }
 `
 
-const Login = ({show, setError, setToken }) => {
+const Login = ({show, setError, setToken, setPage }) => {
     
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
@@ -26,6 +26,7 @@ const Login = ({show, setError, setToken }) => {
           const token = result.data.login.value
           setToken(token)
           localStorage.setItem('osa8-user-token', token)
+          setPage('authors')
         }
       }, [result.data])
     
@@ -36,6 +37,7 @@ const Login = ({show, setError, setToken }) => {
           event.preventDefault()
 
           login({ variables: {username, password}})
+          
       }
 
       return(

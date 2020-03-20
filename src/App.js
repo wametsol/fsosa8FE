@@ -5,7 +5,7 @@ import Books from './components/Books'
 import NewBook from './components/NewBook'
 import Login from './components/login'
 import Recommended from './components/recommended'
-import { gql, useQuery, useLazyQuery, useApolloClient } from '@apollo/client'
+import { gql, useQuery, useSubscription, useApolloClient } from '@apollo/client'
 
 const ALL_AUTHORS = gql`
   query {
@@ -35,6 +35,18 @@ query {
   }
 }
 `
+const BOOK_ADDED = gql`
+  subscription {
+    bookAdded {
+      title
+      author{
+        name
+      }
+      published
+      genres
+    }
+  }
+`
 
 
 const App = () => {
@@ -42,6 +54,8 @@ const App = () => {
   const [page, setPage] = useState('authors')
   const [errorMessage, setErrorMessage] = useState(null)
   const client = useApolloClient()
+
+  
 
   const authors = useQuery(ALL_AUTHORS, {
     pollInterval: 2000
@@ -52,6 +66,28 @@ const App = () => {
   
   const mee = useQuery(GET_ME, {
     pollInterval: 2000
+  })
+  
+  const updateCacheWith = (addedBook) => {
+    const includedIn = (set, object) =>
+      set.map(p => p.id).includes(object.id)
+
+    const dataInStore = client.readQuery({ query: ALL_BOOKS})
+    if (!includedIn(dataInStore.allBooks, addedBook)) {
+      client.writeQuery({
+        query: ALL_BOOKS,
+        data: { allBooks : dataInStore.allBooks.concat(addedBook) }
+      })
+    }  
+  }
+  useSubscription(BOOK_ADDED, {
+    onSubscriptionData: ({ subscriptionData }) => {
+      const addedBook = subscriptionData.data.bookAdded
+      const msg = (`New book: ${addedBook.title}\nAuthor: ${addedBook.author.name}\nPublished: ${addedBook.published}`)
+      notify(msg)
+      updateCacheWith(addedBook)
+      console.log(subscriptionData)
+    }
   })
 
   if (authors.loading || books.loading ) {
@@ -114,6 +150,8 @@ const App = () => {
       />
 
       <NewBook
+        updateCacheWith={updateCacheWith}
+        setError={notify}
         show={page === 'add'}
       />
       <Recommended
